@@ -1,28 +1,3 @@
-# - Checklist
-# Network
-    # VPC & Subnet
-        # Service IPv4 range ; 172.20.0.0/16
-# Compute Spec
-# Security
-    # 보안그룹
-    # Policy 
-        # AmazonEKSClusterPolicy
-        # AmazonEKSVPCResourceController
-        # AmazonEC2ContainerRegistryReadOnly
-        # AmazonEKSWorkerNodePolicy
-        # AmazonEKS_CNI_Policy
-# HA
-# Dependency 
-    # Subnet TAG for Autodetection  O
-    # Node TAG for managed (owned)  O
-
-# Provisioning Time  
-    # NAT Gateway : 1m 30s
-    # EKS Cluster : 11m 10s
-    # Worker Node Group : 2m 10s
-    # Control plane Group : 20s 
-    # Addpms : 1,
-
 module "eks" {
   source = "terraform-aws-modules/eks/aws"
 # version = ""
