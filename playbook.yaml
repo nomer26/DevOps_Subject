@@ -1,5 +1,6 @@
 - name: Ping & Install necessary S/W
   hosts: localhost
+  become: yes
   tasks:
   - name: ping
     ansible.builtin.ping:
@@ -7,12 +8,15 @@
   - name: What is OS?
     command: uname -s
     register: OS
-  - name: Install Helm
+
+  - name: Install kubectl
     ansible.builtin.get_url:
-      url: "https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3"
-      dest: ./get_helm.sh
-      mode: "0700"
-  - command: ./get_helm.sh
+      url: "https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl"
+      dest: /usr/local/bin/kubectl
+      mode: "0755"
+
+  - name: Install Helm
+    shell: "curl -L https://git.io/get_helm.sh | bash -s -- --version v3.8.2"
 
   - name: Install AWS CLI
     ansible.builtin.package:
@@ -27,13 +31,10 @@
   - unarchive:
       src: /tmp/eksctl
       dest: /usr/local/bin
-  - name: Ansible-galaxy Collection install  ( AWS & K8S )
-    command: ansible-galaxy collection install kubernetes.core
-
-  - command: ansible-galaxy collection install community.aws
 
 - name: Create IAM OIDC Provider
   hosts: localhost
+  become: yes
   tasks:
   - command: aws configure get region
     register: REGION
@@ -75,13 +76,19 @@
   - name: Update Kubeconfig
     command: "aws eks update-kubeconfig --region {{ REGION.stdout }} --name {{ CLUSTER_NAME.stdout }}"
 
+  - name: ADD AWS LB Controller Chart repository
+    kubernetes.core.helm_repository:
+      name: aws
+      repo_url: "https://aws.github.io/eks-charts"
+
   - name: Deploy AWS LB Controller Component
     kubernetes.core.helm:
       name: aws-load-balancer-controller
-      chart_ref: eks/aws-load-balanacer-controller
+      chart_ref: aws/aws-load-balancer-controller
       namespace: kube-system
       values:
         clusterName: "{{ CLUSTER_NAME.stdout }}"
+        region: "{{ REGION.stdout }}"
         serviceAccount:
           create: false
           name: aws-load-balancer-controller
