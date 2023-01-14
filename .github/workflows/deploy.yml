@@ -17,7 +17,7 @@ on:
         type: string
 env:
   REGION: ${{ github.event.inputs.region }}
-  ACCOUNT_ID: ${{ secret.AWS_ACCOUNT_ID }}
+  ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   CLUSTER_NAME: ${{ github.event.inputs.CLUSTER_NAME }}
   
 jobs:
