@@ -12,15 +12,12 @@ on:
       region:
         required: true
         type: string
-      ACCOUNT_ID: 
-        required: true
-        type: string
       CLUSTER_NAME:
         required: true
         type: string
 env:
   REGION: ${{ github.event.inputs.region }}
-  ACCOUNT_ID: ${{ github.event.inputs.ACCOUNT_ID }}
+  ACCOUNT_ID: ${{ secret.AWS_ACCOUNT_ID }}
   CLUSTER_NAME: ${{ github.event.inputs.CLUSTER_NAME }}
   
 jobs:
