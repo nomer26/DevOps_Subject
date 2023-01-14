@@ -46,6 +46,7 @@ jobs:
       - name: EKS Cluster Provisioning with Terraform
         run: | 
           cd terraform
+          terraform init
           terraform apply -auto-approve
           cd ..
       
