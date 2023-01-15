@@ -1,0 +1,59 @@
+name: EKS CI/CD
+
+on:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      region:
+        required: true
+        type: string
+      CLUSTER_NAME:
+        required: true
+        type: string
+env:
+  REGION: ${{ github.event.inputs.region }}
+  ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  CLUSTER_NAME: ${{ github.event.inputs.CLUSTER_NAME }}
+  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:      
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Print env
+        run: |
+          echo $REGION
+          echo $ACCOUNT_ID
+          echo $CLUSTER_NAME
+          
+      - name: clone Installation repository & Install Bastion S/W
+        run: |
+          git clone https://github.com/nomer26/Installation
+          cd Installation
+          if [[ $USER == "root" ]]; then sed 's/sudo //g' Bastion-k8s-setup.sh | bash; else bash Bastion-k8s-setup.sh; fi
+          cd ..
+
+      - name: Configure AWS Credentails
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+          
+      - name: EKS Cluster Provisioning with Terraform
+        run: | 
+          cd terraform
+          terraform init
+          terraform apply -var 'cluster_name={{ env.CLUSTER_NAME }}' -auto-approve
+          cd ..
+      
+      - name: Configure EKS eco-system
+        run : |
+          ansible-galaxy collection install kubernetes.core
+          ansible-galaxy collection install community.aws
+          ansible-playbook playbook.yaml
+    
+
