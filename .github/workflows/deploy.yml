@@ -48,5 +48,5 @@ jobs:
         run: |
           cd terraform
           terraform init
-          terraform destroy -auto-approve
+          terraform destroy -var 'cluster_name=github-actions-2' -auto-approve
           
