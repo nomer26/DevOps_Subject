@@ -47,7 +47,7 @@ jobs:
         run: | 
           cd terraform
           terraform init
-          terraform apply -auto-approve
+          terraform apply -var 'cluster_name={{ env.CLUSTER_NAME }}' -auto-approve
           cd ..
       
       - name: Configure EKS eco-system
