@@ -13,7 +13,7 @@ on:
         type: string
 env:
   REGION: ${{ github.event.inputs.region }}
-  ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   CLUSTER_NAME: ${{ github.event.inputs.CLUSTER_NAME }}
   
 jobs:
@@ -26,7 +26,7 @@ jobs:
       - name: Print env
         run: |
           echo $REGION
-          echo $ACCOUNT_ID
+          echo $AWS_ACCOUNT_ID
           echo $CLUSTER_NAME
           
       - name: clone Installation repository & Install Bastion S/W
