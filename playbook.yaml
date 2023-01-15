@@ -1,52 +1,50 @@
-- name: Ping & Install necessary S/W
-  hosts: localhost
-  become: yes
-  tasks:
-  - name: ping
-    ansible.builtin.ping:
+#- name: Ping & Install necessary S/W
+#  hosts: localhost
+#  become: yes
+  #  tasks:
 
-  - name: What is OS?
-    command: uname -s
-    register: OS
-
-  - name: Install kubectl
-    ansible.builtin.get_url:
-      url: "https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl"
-      dest: /usr/local/bin/kubectl
-      mode: "0755"
-
-  - name: Install Helm
-    shell: "curl -L https://git.io/get_helm.sh | bash -s -- --version v3.8.2"
-
-  - name: Install AWS CLI
-    ansible.builtin.package:
-      name: awscli
-      state: present
-
-  - name: install eksctl
-    ansible.builtin.get_url:
-      url: "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_{{ OS.stdout }}_amd64.tar.gz"
-      dest: /tmp/eksctl
-
-  - unarchive:
-      src: /tmp/eksctl
-      dest: /usr/local/bin
+#  - name: Install kubectl
+#    ansible.builtin.get_url:
+#      url: "https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl"
+#      dest: /usr/local/bin/kubectl
+#      mode: "0755"
+#
+#  - name: Install Helm
+#    shell: "curl -L https://git.io/get_helm.sh | bash -s -- --version v3.8.2"
+#
+#  - name: Install AWS CLI
+#    ansible.builtin.package:
+#      name: awscli
+#      state: present
+#
+#  - name: install eksctl
+#    ansible.builtin.get_url:
+#      url: "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_Linux_amd64.tar.gz"
+#      dest: /tmp/eksctl
+#
+#  - unarchive:
+#      src: /tmp/eksctl
+#      dest: /usr/local/bin
 
 - name: Create IAM OIDC Provider
   hosts: localhost
-  become: yes
+  vars: 
+    REGION: "{{ lookup('ansible.builtin.env','REGION') }}"
+    AWS_ACCOUNT_ID: "{{ lookup('ansible.builtin.env','AWS_ACCOUNT_ID') }}"
+    CLUSTER_NAME: "{{ lookup('ansible.builtin.env','CLUSTER_NAME') }}"
+    
   tasks:
-  - command: aws configure get region
-    register: REGION
-  - shell: aws sts get-caller-identity --query='Account' | sed 's/"//g'
-    register: AWS_ACCOUNT_ID
-  - shell: aws eks describe-cluster --name github-actions --query 'cluster.name' | sed 's/"//g'
-    register: CLUSTER_NAME
+          #  - command: aws configure get region
+          #register: REGION
+          #- shell: aws sts get-caller-identity --query='Account' | sed 's/"//g'
+          #register: AWS_ACCOUNT_ID
+          #- shell: aws eks describe-cluster --name github-actions --query 'cluster.name' | sed 's/"//g'
+          #register: CLUSTER_NAME
 
-  - command: "eksctl utils associate-iam-oidc-provider
-    --region {{ REGION.stdout }}
-    --cluster {{ CLUSTER_NAME.stdout }}
-    --approve"
+          #  - command: "eksctl utils associate-iam-oidc-provider
+          #--region {{ REGION }}
+          #--cluster {{ CLUSTER_NAME }}
+          #--approve"
 
   - name: Download  AWS LB Controller IAM Policy
     ansible.builtin.get_url:
@@ -55,26 +53,26 @@
 
   - name: Create IAM Role for AWSLoadBalancerControllerIAMPolicy (Unexpected failure during module execution)
     command: "aws iam create-policy
-  --policy-name AWSLoadBalancerControllerIAMPolicy
-  --policy-document file://iam_policy.json"
+      --policy-name AWSLoadBalancerControllerIAMPolicy
+      --policy-document file://iam_policy.json"
     ignore_errors: yes
-    #community.aws.iam_managed_policy:
-    #  policy_name: "AWSLoadBalancerControllerIAMPolicy"
-    #  policy: "{{ lookup('file', 'iam_policy.json') }}"
-    #  state: present
+      #community.aws.iam_managed_policy:
+      #policy_name: "AWSLoadBalancerControllerIAMPolicy"
+      #policy: "{{ lookup('file', 'iam_policy.json') }}"
+      #state: present
 
   - name: Create IAM Role & Service Account for AWS LB Controller
     command: "eksctl create iamserviceaccount
-  --cluster {{ CLUSTER_NAME.stdout }}
+  --cluster {{ CLUSTER_NAME }}
 --namespace kube-system
 --name aws-load-balancer-controller
---attach-policy-arn arn:aws:iam::{{ AWS_ACCOUNT_ID.stdout }}:policy/AWSLoadBalancerControllerIAMPolicy
+--attach-policy-arn arn:aws:iam::{{ AWS_ACCOUNT_ID }}:policy/AWSLoadBalancerControllerIAMPolicy
 --override-existing-serviceaccounts
---region {{ REGION.stdout }}
+--region {{ REGION }}
 --approve"
 
   - name: Update Kubeconfig
-    command: "aws eks update-kubeconfig --region {{ REGION.stdout }} --name {{ CLUSTER_NAME.stdout }}"
+    command: "aws eks update-kubeconfig --region {{ REGION }} --name {{ CLUSTER_NAME }}"
 
   - name: ADD AWS LB Controller Chart repository
     kubernetes.core.helm_repository:
@@ -87,8 +85,8 @@
       chart_ref: aws/aws-load-balancer-controller
       namespace: kube-system
       values:
-        clusterName: "{{ CLUSTER_NAME.stdout }}"
-        region: "{{ REGION.stdout }}"
+        clusterName: "{{ CLUSTER_NAME }}"
+        region: "{{ REGION }}"
         serviceAccount:
           create: false
           name: aws-load-balancer-controller

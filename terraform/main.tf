@@ -32,5 +32,5 @@
 
 
 locals {
-    cluster_name = "github-actions"
+    cluster_name = "nomer26-eks"
 }
