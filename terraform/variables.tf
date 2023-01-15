@@ -23,3 +23,7 @@ variable "alb-ic-name" {
     description = "Key Name of ALB Ingress Controller"
     type = string
 }
+
+variable "cluster_name" {
+  type = string
+}

@@ -32,5 +32,5 @@
 
 
 locals {
-    cluster_name = "nomer26-eks"
+    cluster_name = var.cluster_name
 }
