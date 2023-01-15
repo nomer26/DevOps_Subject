@@ -31,10 +31,10 @@ jobs:
       
       - name: kubectl
         run: |
-          curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
-          echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
-          apt-get update -y
-          apt-get install -y kubectl
+          sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+          echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+          sudo apt-get update -y
+          sudo apt-get install -y kubectl
           mkdir -p ~/.kube
           cat << EOF > ~/.kube/config
           apiVersion: v1
