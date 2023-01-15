@@ -43,10 +43,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.REGION }}
           
-    
-      - name: Destroy
-        run: |
+      - name: EKS Cluster Provisioning with Terraform
+        run: | 
           cd terraform
           terraform init
-          terraform destroy -var 'cluster_name=github-actions-2' -auto-approve
-          
+          terraform apply -var 'cluster_name=${{ env.CLUSTER_NAME }}' -auto-approve
+          cd ..
+      
+      - name: Configure EKS eco-system
+        run : |
+          ansible-galaxy collection install kubernetes.core
+          ansible-galaxy collection install community.aws
+          ansible-playbook playbook.yaml
+     
+        
+      - name: Deploy K8S Service
+        run : |
+          kubectl create deployment nginx --image=nginx --replicas=2 --port=80
+          kubectl expose deployment nginx --type="NodePort" --port=80 --target-port=80
+          kubectl create ingress nginx --rule="/*=nginx-svc:80" --annotation alb.ingress.kubernetes.io/scheme=internet-facing --annotation kubernetes.io/ingress.class=alb
