@@ -28,41 +28,37 @@ jobs:
           echo $REGION
           echo $AWS_ACCOUNT_ID
           echo $CLUSTER_NAME
-      
-      - name: kubectl
+          
+      - name: clone Installation repository & Install Bastion S/W
         run: |
-          sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
-          echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-          sudo apt-get update -y
-          sudo apt-get install -y kubectl
-          mkdir -p ~/.kube
-          cat << EOF > ~/.kube/config
-          apiVersion: v1
-          clusters:
-          - cluster:
-              certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMvakNDQWVhZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJek1ERXhOVEU1TURjeU9Wb1hEVE16TURFeE1qRTVNRGN5T1Zvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTlhsClltUDAvTlBHenpOYnVERHcvZVNVeWF4QnIrdjFJc2VONy9Ick94ZFY3ZHVxcFltdmNCQktmWUxBczNHMGY3TTgKaWtZeTVQYzJ3elBxc3FDeC9lRUkxQWVRMEQyN1hsWjZnaDgvVU5hOVdGNzBySmRkQTRORkJpVmFheEZ3RmlwVApSM05jS2RYV2RQUUNMbnVUOGRSa3d2K2IrdllmZStPamJIUTFvQmhKT1d3ckZOQ0xvb3VUMmxlYVZEdkVyaFg4CkZ5ZFVNMmhmOHYxVnZ2UmwwdHVMRWtmUEtEMjFJWXJaSndCM29DMjZXZnlmUG8xckZEUUN1Z0prMU1QTXNzSUMKOFI5czlFbXNiVjRPejYrS1BDaGp3aVVsZC9lNlFkWHh1NHZ2aU4wZFowODlYejZ0UzI2WmswWXhnRGY1VXFwQwpHSCt4Ui9FZmFrOFcrYkc3QWpVQ0F3RUFBYU5aTUZjd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0hRWURWUjBPQkJZRUZKLzErMDFNOTE5WVhvUGx2L0U5K2U5OWRSWm9NQlVHQTFVZEVRUU8KTUF5Q0NtdDFZbVZ5Ym1WMFpYTXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBSzhhQk9iYi9JZERYaTg5L2lYTApLRW8yUEpLdDVYZ0V6OTYwVHRqTHl3aEdLV1ZTYnZSS3RZaUpFTG1LTnNvdCtPZUl2b1JaS2F2aTlBamRYZVVRCjY4UjIzR0JvR05JT0xyYVhPS1JNQjl2Lzd1THVLemQySEszQS84MXcrOTZzUS8yY1pKVTF3cy8wNXM4bmNOeloKQ0I4ckhaMWRwZGdWemMveVhBMDZLTllqSmUvdVMrZUJQUkJFZGRISVcreGVhb0R6TVVlQzhRODAva0ROL3FzZQptVVZhbmRTQXk1N0w5a0I3dXk0WWZCdEplWjdUNE40NDhOMVZjbG0wL0xnWVZBWEpyejdDbnB2Q051N0t2TyswCnUzWkNneGVvb0tCU2VMeFl5ZWZZTXZGZ3NYcFNUTm5zR0V4aENJMCtlaktKTkJnZzZlcC9aRkFmNGJoaFhlREkKcytjPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
-              server: https://E36FB10D1D24245DB67B5AD4A1E1BCE5.gr7.ap-northeast-2.eks.amazonaws.com
-            name: arn:aws:eks:ap-northeast-2:***:cluster/github-actions-2
-          contexts:
-          - context:
-              cluster: arn:aws:eks:ap-northeast-2:***:cluster/github-actions-2
-              user: arn:aws:eks:ap-northeast-2:***:cluster/github-actions-2
-            name: arn:aws:eks:ap-northeast-2:***:cluster/github-actions-2
-          current-context: arn:aws:eks:ap-northeast-2:***:cluster/github-actions-2
-          kind: Config
-          preferences: {}
-          users:
-          - name: arn:aws:eks:ap-northeast-2:***:cluster/github-actions-2
-            user:
-              exec:
-                apiVersion: client.authentication.k8s.io/v1beta1
-                args:
-                - --region
-                - ap-northeast-2
-                - eks
-                - get-token
-                - --cluster-name
-                - github-actions-2
-                command: aws
-          EOF
-          kubectl patch service nginx-svc -p '{"spec":{"type": "NodePort"}}'
+          git clone https://github.com/nomer26/Installation
+          cd Installation
+          if [[ $USER == "root" ]]; then sed 's/sudo //g' Bastion-k8s-setup.sh | bash; else bash Bastion-k8s-setup.sh; fi
+          cd ..
+
+      - name: Configure AWS Credentails
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+          
+      - name: EKS Cluster Provisioning with Terraform
+        run: | 
+          cd terraform
+          terraform init
+          terraform apply -var 'cluster_name=${{ env.CLUSTER_NAME }}' -auto-approve
+          cd ..
+      
+      - name: Configure EKS eco-system
+        run : |
+          ansible-galaxy collection install kubernetes.core
+          ansible-galaxy collection install community.aws
+          ansible-playbook playbook.yaml
+     
+        
+      - name: Deploy K8S Service
+        run : |
+          kubectl create deployment nginx --image=nginx --replicas=2 --port=80
+          kubectl expose deployment nginx --type="NodePort" --port=80 --target-port=80
+          kubectl create ingress nginx --rule="/*=nginx-svc:80" --annotation alb.ingress.kubernetes.io/scheme=internet-facing --annotation kubernetes.io/ingress.class=alb
