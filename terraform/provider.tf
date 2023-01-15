@@ -1,4 +1,10 @@
 terraform {
+  backend "s3" {
+    bucket = "nomer26-backend"
+    key = "terraform/terraform.tfstate"
+    region = "ap-northeast-2"
+    encrypt = true
+  }
   required_providers {
     aws = {
       source  = "hashicorp/aws"
