@@ -56,4 +56,8 @@ jobs:
           ansible-galaxy collection install community.aws
           ansible-playbook playbook.yaml
     
-
+      - name: Deploy K8S Service
+        run : |
+          kubectl create deployment nginx --image=nginx --replicas=2 --port=80
+          kubectl expose deployment nginx --port=80 --target-port=80
+          kubectl create ingress nginx --rule="/*=nginx-svc:80" --annotation alb.ingress.kubernetes.io/scheme=internet-facing --annotation kubernetes.io/ingress.class=alb
