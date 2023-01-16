@@ -45,10 +45,8 @@ jobs:
           
       - name: EKS Cluster Provisioning with Terraform
         run: | 
-          cd terraform
-          terraform init
-          terraform apply -var 'cluster_name=${{ env.CLUSTER_NAME }}' -auto-approve
-          cd ..
+          terraform -chdir=./terraform init
+          terraform -chdir=./terraform apply -var 'cluster_name=${{ env.CLUSTER_NAME }}' -auto-approve
       
       - name: Configure EKS eco-system
         run : |
