@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: exem-nginx
+  name: exem-nginx
+  namespace: exem
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: exem-nginx
+  type: NodePort
+status:
+  loadBalancer: {}

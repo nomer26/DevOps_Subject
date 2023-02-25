@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    kubernetes.io/ingress.class: alb
+  creationTimestamp: null
+  name: exem-nginx-ingress
+  namespace: exem
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: exem-nginx-svc
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+status:
+  loadBalancer: {}
